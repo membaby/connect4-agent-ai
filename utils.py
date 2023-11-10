@@ -86,18 +86,18 @@ def play_connect_four():
         while True:
             human_col = int(input("Enter your move (column 1-7): ")) - 1
             if is_valid_move(board, human_col):
+                make_move(board, human_col, HUMAN)
                 break
             else:
                 print("Invalid input!!... Please choose again")
-        make_move(board, human_col, HUMAN)
 
         # Computer's turn
         print("Computer's turn...")
         while True:
             computer_col = random.randint(0, 6)
             if is_valid_move(board, computer_col):
+                make_move(board, computer_col, COMPUTER)
                 break
-        make_move(board, computer_col, COMPUTER)
 
         draw_board(board)
         if is_board_full(board):
