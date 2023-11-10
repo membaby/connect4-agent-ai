@@ -10,30 +10,13 @@ COLS = 7
 def initialize_board():
     return [[EMPTY] * COLS for _ in range(ROWS)]
 
-# Function to print the current game board
-def draw_board(board):
-    # TODO: Implement the gui here
-    for row in board:
-        print('|', end=' ')
-        for cell in row:
-            if cell == EMPTY:
-                print(' ', end=' ')
-            elif cell == HUMAN:
-                print('X', end=' ')
-            elif cell == COMPUTER:
-                print('O', end=' ')
-            print('|', end=' ')
-        print()
-    print('-' * (COLS * 4 + 1))
-
 def is_valid_move(board, col):
     return 0 <= col <= 6 and board[0][col] == EMPTY
 
-def make_move(board, col, player):
-    for row in range(ROWS - 1, -1, -1):
-        if board[row][col] == EMPTY:
-            board[row][col] = player
-            break
+
+def is_board_full(board):
+    return all(cell != EMPTY for row in board for cell in row)
+
 
 def count_connected_fours(board, player):
     count = 0
@@ -64,45 +47,13 @@ def count_connected_fours(board, player):
 
     return count
 
-def is_board_full(board):
-    return all(cell != EMPTY for row in board for cell in row)
 
 def finalize_game(board):
     human_count = count_connected_fours(board, HUMAN)
     computer_count = count_connected_fours(board, COMPUTER)
     if human_count > computer_count:
-        print("You won")
+        return "You won", "blue"
     elif human_count < computer_count:
-        print("Computer won")
+        return "Computer won", "red"
     else:
-        print("It's a draw!")
-
-def play_connect_four():
-    board = initialize_board()
-    draw_board(board)
-
-    while True:
-        # Human's turn
-        while True:
-            human_col = int(input("Enter your move (column 1-7): ")) - 1
-            if is_valid_move(board, human_col):
-                make_move(board, human_col, HUMAN)
-                break
-            else:
-                print("Invalid input!!... Please choose again")
-
-        # Computer's turn
-        print("Computer's turn...")
-        while True:
-            computer_col = random.randint(0, 6)
-            if is_valid_move(board, computer_col):
-                make_move(board, computer_col, COMPUTER)
-                break
-
-        draw_board(board)
-        if is_board_full(board):
-            finalize_game(board)
-            break
-
-if __name__ == "__main__":
-    play_connect_four()
+        return "It's a draw!", "green"
