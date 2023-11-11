@@ -1,8 +1,10 @@
 class TreeNode:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, bitboard, depth, is_maximizing_player):
+        self.bitboard = bitboard
+        self.depth = depth
+        self.is_maximizing_player = is_maximizing_player
         self.children = []
-        self.parent = None
+        self.score = None
 
     def add_child(self, child):
         child.parent = self
@@ -52,3 +54,18 @@ class TreeNode:
         for child in self.children:
             child.print_tree()
 
+def IS_GAME_OVER(bitboard):
+    # TO-DO - CHECK IF BOARD IS FULL / GAME IS OVER
+    return False
+
+def CAN_MAKE_MOVE(bitboard, column):
+    # TO-DO - CHECK IF THERE IS A VALID MOVE
+    return True
+
+def MAKE_MOVE(bitboard, column, player):
+    # TO-DO - MAKE A MOVE
+    return bitboard
+
+def GET_POSSIBLE_MOVES(bitboard):
+    # TO-DO - GET POSSIBLE MOVES
+    return []
