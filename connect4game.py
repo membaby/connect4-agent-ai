@@ -2,7 +2,6 @@ import sys
 import utils
 import random
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
 
 EMPTY_COLOR = "#e0e0e0"
 HUMAN_COLOR = "#0000ff"
@@ -20,7 +19,6 @@ class Connect4Game(QWidget):
         self.init_ui()
         self.current_player = utils.HUMAN
 
-
     def init_ui(self):
         self.setWindowTitle('Connect 4 Game')
         self.setGeometry(200, 200, 400, 450)
@@ -30,7 +28,8 @@ class Connect4Game(QWidget):
         # Title label for "Connect 4"
         title_label = QLabel("Connect 4 Game")
 
-        title_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #333; margin-bottom: 20px; text-align: ""center;")
+        title_label.setStyleSheet(
+            "font-size: 24px; font-weight: bold; color: #333; margin-bottom: 20px; text-align: ""center;")
         main_layout.addWidget(title_label)
 
         for row in range(utils.ROWS):
@@ -74,7 +73,6 @@ class Connect4Game(QWidget):
         self.setLayout(main_layout)
         self.show()
 
-
     def button_clicked(self, col):
         if self.current_player == utils.COMPUTER:
             return
@@ -102,17 +100,15 @@ class Connect4Game(QWidget):
         # Modify the dropdown list content
         pass
 
-
     def drop_disc(self, col):
         for row in range(5, -1, -1):
             if self.buttons[row][col].palette().button().color().name() == EMPTY_COLOR:
                 return row
         return None
 
-
     def computer_agent(self):
         while True:
-            col = random.randint(0, utils.COLS-1)
+            col = random.randint(0, utils.COLS - 1)
             if utils.is_valid_move(self.board, col):
                 break
 
