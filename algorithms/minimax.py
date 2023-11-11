@@ -52,7 +52,7 @@ class Minimax:
             
     def solve(self):
         root = self.generate_minimax_tree(self.max_depth, self.current_bitboard, self.maximizing_player)
-        return root
+        return root, self.path
 
 
 #####functions needed 

@@ -26,6 +26,7 @@ class MinimaxAlphaBeta:
                     node.children.append(child_node)
                     max_score = max(max_score, child_node.score)
                     self.alpha = max(alpha, child_node.score)
+                    self.path.append(new_bitboard)
                     if (self.beta <= self.alpha):
                         break
             node.score = max_score
@@ -39,6 +40,7 @@ class MinimaxAlphaBeta:
                     node.children.append(child_node)
                     min_score = min(min_score, child_node.score)
                     self.beta = min(beta, child_node.score)
+                    self.path.append(new_bitboard)
                     if (self.beta <= self.alpha):
                         break
             node.score = min_score
@@ -46,4 +48,4 @@ class MinimaxAlphaBeta:
         
     def solve(self):
         root = self.generate_minimax_tree(self.max_depth, self.current_bitboard, self.alpha, self.beta, self.maximizing_player)
-        return root
+        return root, self.path
