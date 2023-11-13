@@ -1,5 +1,5 @@
 from utils import *
-from tree_node import TreeNode, IS_GAME_OVER, CAN_MAKE_MOVE, MAKE_MOVE
+from tree_node import TreeNode
 from heuristics import heuristic_evaluation
 
 class MinimaxAlphaBeta:
