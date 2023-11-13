@@ -552,7 +552,7 @@ class MainGame:
 K = input(".:Enter K: ")
 K = int(K)
 METHOD = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
-METHOD = input(METHOD)
+METHOD = int(METHOD)
 # Initialize pygame
 pygame.init()
 
