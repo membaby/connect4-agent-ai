@@ -1,3 +1,44 @@
+ROWS = 6
+COLS = 7
+HUMAN = 0
+COMPUTER = 1
+EMPTY = 2
+
+current_bitboard = 0b110000000110000000110000000110000000110000000110000000110000000
+current_numboard = [[EMPTY] * COLS for _ in range(ROWS)]
+
+
+def initialize_board():
+    current_bitboard = 0b110000000110000000110000000110000000110000000110000000110000000
+    current_numboard = [[EMPTY] * COLS for _ in range(ROWS)]
+
+def make_move(col, player):
+    # update 2d-array board
+    for row in range(ROWS - 1, -1, -1):
+        if current_numboard[row][col] == EMPTY:
+            current_numboard[row][col] = player
+            break
+
+    # update bits board
+    col_bits = (current_bitboard >> ((6 - column) * 9)) & 0b111111111
+    index = (col_bits >> 6) & 0b111
+
+    col_bits |= player << (6 - index)
+    index -= 1
+    col_bits &= 0b000111111
+    col_bits |= index << 6
+    current_bitboard &= ~(0b111111111 << ((6 - column) * 9))
+    current_bitboard |= col_bits << ((6 - column) * 9)
+
+
+def is_valid_move(col):
+    return current_numboard[0][col] == EMPTY
+
+
+def is_game_over():
+    return IS_GAME_OVER(current_bitboard)
+
+
 def IS_GAME_OVER(bitboard):
     bitboard >>= 6
     for col in range(7):
@@ -5,9 +46,11 @@ def IS_GAME_OVER(bitboard):
             return False
     return True
 
+
 def CAN_MAKE_MOVE(bitboard, column):
     print((bitboard >> ((6 - column) * 9) + 6) & 0b111)
     return ((bitboard >> ((6 - column) * 9) + 6) & 0b111) != 0
+
 
 def MAKE_MOVE(bitboard, column, player):
     col_bits = (bitboard >> ((6 - column) * 9)) & 0b111111111
@@ -24,6 +67,7 @@ def MAKE_MOVE(bitboard, column, player):
     bitboard |= col_bits << ((6 - column) * 9)
 
     return bitboard
+
 
 def GET_POSSIBLE_MOVES(bitboard):
     moves = []
