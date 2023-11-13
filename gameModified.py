@@ -6,15 +6,15 @@ import numpy as np
 import time
 import networkx as nx
 import matplotlib.pyplot as plt
-import more_utils
+import tree_node
 
 # Constants
-ROWS = 6
-COLS = 7
+# ROWS = 6
+# COLS = 7
 PLAYER_TURN = 0
 AI_TURN = 1
-PLAYER_PIECE = 1
-AI_PIECE = 2
+# PLAYER_PIECE = 1
+# AI_PIECE = 2
 
 BLUE = (0, 0, 255)
 GRAY = (233, 233, 233)
