@@ -1,10 +1,9 @@
 from utils import *
-from tree_node import TreeNode, IS_GAME_OVER, CAN_MAKE_MOVE, MAKE_MOVE
+from tree_node import TreeNode
 from heuristics import heuristic_evaluation
 
 # # Minimax algorithm
 class Minimax:
-    def minimax(board, depth, maximizing_player):
         def __init__(self, bitboard, max_depth, maximizing_player):
             self.current_bitboard = bitboard
             self.max_depth = max_depth
@@ -50,9 +49,9 @@ class Minimax:
                 node.score = min_eval
                 return node
             
-    def solve(self):
-        root = self.generate_minimax_tree(self.max_depth, self.current_bitboard, self.maximizing_player)
-        return root, self.path
+        def solve(self):
+            root = self.generate_minimax_tree(self.max_depth, self.current_bitboard, self.maximizing_player)
+            return root, self.path
 
 
 #####functions needed 
