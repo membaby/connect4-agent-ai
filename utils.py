@@ -81,14 +81,35 @@ def GET_POSSIBLE_MOVES(bitboard):
             moves.insert(0, 6 - col)
     return moves
 
-if __name__ == '__main__':
-    # Example usage with the corrected understanding of column full/empty
-    initial_bitboard = int("100000001110000000110000000110000000101000001110000000000101010", 2)
-    new_bitboard = MAKE_MOVE(initial_bitboard, 6, 0)
-    # print(GET_POSSIBLE_MOVES(initial_bitboard))
-    new_bitboard_bin = bin(new_bitboard)
 
-    # print(new_bitboard_bin)
+def GET_CHANGED_COLUMN(bitboard1, bitboard2):
+    for col in range(COLS):
+        col_bits1 = (bitboard1 >> (9 * col)) & 0b111111111
+        col_bits2 = (bitboard2 >> (9 * col)) & 0b111111111
+
+        if col_bits1 != col_bits2:
+            return 6 - col
+
+
+def bitboard_to_array(bitboard):
+    numboard = [[EMPTY] * COLS for _ in range(ROWS)]
+    for col in range(COLS):
+        col_bits = (bitboard >> ((6 - col) * 9)) & 0b111111111
+        index = (col_bits >> 6) & 0b111
+
+        for row in range(ROWS):
+            cell = (col_bits >> (5 - row)) & 0b1
+
+            if row >= index:
+                numboard[row][col] = cell
+
+    return numboard
+
+
+if __name__ == '__main__':
+    # initial_bitboard = int("100000001110000000110000000110000000101000001110000000000101010", 2)
+    # new_bitboard = MAKE_MOVE(initial_bitboard, 6, 0)
+    # print(bin(new_bitboard))
 
     # 101000001110000000110000000110000000110000000110000000110000000
     # 100000001110000000110000000110000000110000000110000000110000000
@@ -100,3 +121,6 @@ if __name__ == '__main__':
     # 100000001110000000110000000110000000101000001110000000001001010
     # 100000001110000000110000000110000000101000001110000000000101010
     # 100000001110000000110000000110000000101000001110000000000101010
+
+    bitboard = 0b100000001110000000110000000110000000101000001110000000000101010
+    print(bitboard_to_array(bitboard))

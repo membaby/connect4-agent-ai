@@ -3,19 +3,17 @@ import sys
 import random
 import math
 import time
-import utils as utils
-import tree_node as tree_node
+
+import utils
+import tree_node
 from algorithms.minimax import Minimax
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
 
 # Constants
-ROWS = 6
-COLS = 7
 PLAYER_TURN = 0
 AI_TURN = 1
-PLAYER_PIECE = 1
-AI_PIECE = 2
 
+# Colors
 BLUE = (0, 0, 255)
 GRAY = (233, 233, 233)
 DARK_BLUE = (51, 54, 82)
@@ -23,40 +21,86 @@ RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 
+# Constants Dimensions
 SQUARESIZE = 100
 SIDEBAR_WIDTH = 390
-WIDTH = COLS * SQUARESIZE + SIDEBAR_WIDTH
-HEIGHT = (ROWS + 1) * SQUARESIZE
+WIDTH = utils.COLS * SQUARESIZE + SIDEBAR_WIDTH
+HEIGHT = (utils.ROWS + 1) * SQUARESIZE
 CIRCLE_RADIUS = int(SQUARESIZE / 2 - 5)
 SIZE = (WIDTH, HEIGHT)
 SCREEN = pygame.display.set_mode(SIZE)
 BUTTON_WIDTH = 200
 BUTTON_HEIGHT = 40
+root_position = [utils.COLS * SQUARESIZE + SIDEBAR_WIDTH / 2 - 50, 3 * SQUARESIZE]
 
 # Global variables
 player_score = 0
 ai_score = 0
-other_data = 0
-DEPTH = 0
-METHOD = None
+time = 0
+nodes_expanded = 0
+K = 0
+method = None
+
+
+class Sidebar:
+    def __init__(self, font):
+        self.font = font
+        self.tree_button = Button(font, "Show Game Tree", utils.COLS * SQUARESIZE + 10,
+                                  150, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.reset_button = Button(font, "Reset", (utils.COLS + 2.47) * SQUARESIZE, 150, BUTTON_WIDTH / 1.5,
+                                   BUTTON_HEIGHT)
+        self.my_font = pygame.font.SysFont("monospace", 25, bold=True)
+        self.data_font = pygame.font.SysFont("monospace", 20, bold=True)
+        self.graph_shown = False
+        self.game_tree = GameTree(SCREEN)
+        self.tree = None
+
+    def draw(self):
+        player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE)
+        ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE)
+        nodes_expanded_text = self.data_font.render(f"Nodes Expanded: {nodes_expanded}", 1, DARK_BLUE)
+        time_text = self.data_font.render(f"Time: {time}", 1, DARK_BLUE)
+
+        # Sidebar rectangle
+        pygame.draw.rect(SCREEN, GRAY, (utils.COLS * SQUARESIZE, 0, SIDEBAR_WIDTH, HEIGHT))
+
+        # Adjusting Position
+        SCREEN.blit(player_score_text, (utils.COLS * SQUARESIZE + 10, 50))
+        SCREEN.blit(nodes_expanded_text, (utils.COLS * SQUARESIZE + 20, 630))
+        SCREEN.blit(time_text, (utils.COLS * SQUARESIZE + 20, 660))
+        SCREEN.blit(ai_score_text, (utils.COLS * SQUARESIZE + 10, 100))
+
+        self.tree_button.draw(SCREEN, DARK_BLUE)
+        self.reset_button.draw(SCREEN, RED)
+        if self.graph_shown:
+            spacing = (55, 55)
+            self.game_tree.draw_tree(self.tree, spacing)
+            x, y = pygame.mouse.get_pos()
+            if x > 700 and y > 230:
+                self.game_tree.handle_events()
+                self.tree = self.game_tree.root_node
+                self.game_tree.draw_tree(self.game_tree.root_node, spacing)
+
 
 class GameTree:
     def __init__(self, screen, node_radius=20):
         self.screen = screen
         self.node_radius = node_radius
-        self.font = pygame.font.SysFont(None, 30)
-        self.node_color = DARK_BLUE
-        self.hovered_node = None
         self.node_positions = {}  # Store positions of all nodes
+        self.root_position = []
+
+        self.font = pygame.font.SysFont(None, 30)
         self.edge_color = (255, 255, 255)
         self.last_click_time = 0
-        self.double_click_delay = 200  # Adjust this value as needed (in milliseconds)
+        self.double_click_delay = 500  # Adjust this value as needed (in milliseconds)
+
         self.state_rendered = False
         self.rendered_node = None
         self.root_node = None
-        self.main_game = MainGame()  # TODO call method (get_board(bitboard))
+        self.hovered_node = None
+        self.shown_state = None
 
-    def draw_tree(self, root_node, root_position, spacing):
+    def draw_tree(self, root_node, spacing):
         if not root_node:
             print("No nodes provided.")
             return
@@ -67,28 +111,27 @@ class GameTree:
         root_position[0] = root_position[0] - 40
         node_positions[root_node] = root_position
         self._draw_child_nodes(root_position, root_node.children, spacing, 1)
-        self.draw_options(root_position, root_node.is_maximizing_player)
+        self.draw_options(root_node.is_maximizing_player)
         if self.rendered_node:
-            self.render_state(self.rendered_node)
+            self.render_state()
 
-    def draw_options(self, root_position, is_min):
+    def draw_options(self, is_min):
         min_max_text_position = (root_position[0] + 75, root_position[1] - 20)
-        min_max_text = None
-        if is_min:
+        if not is_min:
             min_max_text = self.font.render("MIN NODE", True, RED)
         else:
             min_max_text = self.font.render("MAX NODE", True, DARK_BLUE)
 
         self.screen.blit(min_max_text, min_max_text_position)
 
-    def render_state(self, node):
-        position = ((COLS + 0.5) * SQUARESIZE, (ROWS - 2) * SQUARESIZE + 25)
-        text = self.font.render(f"State: {node.bitboard}", True, DARK_BLUE)
+    def render_state(self):
+        position = ((utils.COLS + 0.5) * SQUARESIZE, (utils.ROWS - 2) * SQUARESIZE + 25)
+        text = self.font.render(f"State: {self.rendered_node.bitboard}", True, DARK_BLUE)
         self.screen.blit(text, position)
 
     def _draw_node(self, position, node):
         x, y = position
-        pygame.draw.circle(self.screen, self.node_color, (x, y), self.node_radius * 1.25)
+        pygame.draw.circle(self.screen, DARK_BLUE, (x, y), self.node_radius * 1.25)
 
         text = self.font.render(str(node.score), True, (255, 255, 255))
         text_width, text_height = self.font.size(str(node.score))
@@ -118,6 +161,10 @@ class GameTree:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            if self.rendered_node:
+                self.render_state()
+            if self.root_node:
+                self.draw_options(self.root_node.is_maximizing_player)
             if event.type == pygame.MOUSEMOTION:
                 x, y = event.pos
                 if x < 700 and y < 230:
@@ -139,14 +186,26 @@ class GameTree:
                     if event.button == 1:  # Left mouse button (single-click)
                         self.rendered_node = self.hovered_node
                         self.state_rendered = True
+                        self.render_state()
                         current_time = pygame.time.get_ticks()
                         if current_time - self.last_click_time < self.double_click_delay:
                             # Double-click event
                             self.last_click_time = 0
                             print(f"Double-clicked on {self.hovered_node.score}")
-                            spacing = (55, 55)
-                            root_position = [COLS * SQUARESIZE + SIDEBAR_WIDTH / 2 - 50, 3 * SQUARESIZE]
-                            self.draw_tree(self.hovered_node, root_position, spacing)
+                            if self.rendered_node != self.root_node:
+                                print(self.rendered_node.bitboard)
+                                self.root_node = self.rendered_node
+                                # print(self.rendered_node.bitboard)
+                                self.render_state()
+                                self.draw_options(self.rendered_node.is_maximizing_player)
+                                print("Child Node Clicked")
+                                return
+                            elif self.rendered_node.is_maximizing_player and self.root_node.is_maximizing_player or not self.rendered_node.is_maximizing_player and not self.rendered_node.is_maximizing_player:
+                                if not self.rendered_node.parent:
+                                    print("Parent Node does not exist")
+                                else:
+                                    print("Parent Exists: ")
+                                return
                         else:
                             # Single-click event
                             self.last_click_time = current_time
@@ -174,75 +233,38 @@ class Button:
         screen.blit(text_render, text_position)
 
 
-class Sidebar:
-    def __init__(self, font):
-        self.font = font
-        self.tree_button = Button(font, "Show Game Tree", COLS * SQUARESIZE + 10,
-                                  150, BUTTON_WIDTH, BUTTON_HEIGHT)
-        self.reset_button = Button(font, "Reset", (COLS + 2.47) * SQUARESIZE, 150, BUTTON_WIDTH/1.5, BUTTON_HEIGHT)
-        self.my_font = pygame.font.SysFont("monospace", 25, bold=True)
-        self.data_font = pygame.font.SysFont("monospace", 20, bold=True)
-        self.graph_shown = False
-        self.game_tree = GameTree(SCREEN)
-        self.tree = None  # TODO get from miniMax
-
-    def draw(self):
-        player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE)
-        ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE)
-        nodes_expanded = self.data_font.render(f"Nodes Expanded: {other_data}", 1, DARK_BLUE)
-        time = self.data_font.render(f"Time: {other_data}", 1, DARK_BLUE)
-
-        # Sidebar rectangle
-        pygame.draw.rect(SCREEN, GRAY, (COLS * SQUARESIZE, 0, SIDEBAR_WIDTH, HEIGHT))
-
-        SCREEN.blit(player_score_text, (COLS * SQUARESIZE + 10, 50))
-        SCREEN.blit(nodes_expanded, (COLS * SQUARESIZE + 20, 630))
-        SCREEN.blit(time, (COLS * SQUARESIZE + 20, 660))
-        SCREEN.blit(ai_score_text, (COLS * SQUARESIZE + 10, 100))
-
-        self.tree_button.draw(SCREEN, DARK_BLUE)
-        self.reset_button.draw(SCREEN, RED)
-        if self.graph_shown:
-            spacing = (55, 55)
-            root_position = [COLS * SQUARESIZE + SIDEBAR_WIDTH / 2 - 50, 3 * SQUARESIZE]
-            self.game_tree.draw_tree(self.tree, root_position, spacing)
-            x, y = pygame.mouse.get_pos()
-            if x > 700 and y > 230:
-                self.game_tree.handle_events()
-            # self.tree = self.game_tree.root_node
-
 class MainGame:
     def __init__(self):
         utils.initialize_board()
-        self.board = utils.current_numboard
         self.game_over = False
-        self.not_over = True
+
         self.turn = random.randint(PLAYER_TURN, AI_TURN)
         self.my_font = pygame.font.SysFont("monospace", 20, bold=True)
-        # Draw initial GUI
-        self.draw_board(self.board)
+        self.draw_board(utils.current_numboard)
+
         pygame.display.update()
-        self.bitboard = utils.current_bitboard
 
     def reset_data(self):
-        DEPTH = 0
+        global K, ai_score, player_score, time, nodes_expanded, method
+        K = 0
         ai_score = 0
         player_score = 0
-        other_data = 0
-        METHOD = None
-        DEPTH = input(".:Enter DEPTH: ")
-        METHOD = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
-        DEPTH = int(DEPTH)
-        METHOD = int(METHOD)
+        time = 0
+        nodes_expanded = 0
+        method = None
+        K = input(".:Enter K: ")
+        method = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
+        K = int(K)
+        method = int(method)
         utils.initialize_board()
-        self.board = utils.current_numboard
-        self.draw_board(self.board)
+        self.draw_board(utils.current_numboard)
 
     # TODO convert board into our state
     def draw_board(self, board):
-        for c in range(COLS):
-            for r in range(ROWS):
-                pygame.draw.rect(SCREEN, DARK_BLUE, (c * SQUARESIZE, r * SQUARESIZE + SQUARESIZE, SQUARESIZE, SQUARESIZE))
+        for c in range(utils.COLS):
+            for r in range(utils.ROWS):
+                pygame.draw.rect(SCREEN, DARK_BLUE,
+                                 (c * SQUARESIZE, r * SQUARESIZE + SQUARESIZE, SQUARESIZE, SQUARESIZE))
                 if board[r][c] == utils.EMPTY:
                     pygame.draw.circle(SCREEN, GRAY, (
                         int(c * SQUARESIZE + SQUARESIZE / 2), int(r * SQUARESIZE + SQUARESIZE + SQUARESIZE / 2)),
@@ -258,7 +280,6 @@ class MainGame:
         pygame.display.update()
 
     def run(self):
-        global DEPTH
         while not self.game_over:
             sidebar.draw()
             for event in pygame.event.get():
@@ -266,10 +287,12 @@ class MainGame:
                     sys.exit()
 
                 # Clicks on the sidebar
-                if event.type == pygame.MOUSEBUTTONDOWN and DEPTH > 0:
+                if event.type == pygame.MOUSEBUTTONDOWN and K > 0:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if sidebar.tree_button.rect.collidepoint(mouse_x, mouse_y):
-                        sidebar.graph_shown = True
+                        if sidebar.tree:
+                            sidebar.graph_shown = True
+                            # self.initial_node_shown = True
                     elif sidebar.reset_button.rect.collidepoint(mouse_x, mouse_y):
                         self.reset_data()
                         break
@@ -278,12 +301,13 @@ class MainGame:
                 if event.type == pygame.MOUSEMOTION and not self.game_over:
                     pygame.draw.rect(SCREEN, GRAY, (0, 0, WIDTH - SIDEBAR_WIDTH, SQUARESIZE))
                     xpos = pygame.mouse.get_pos()[0]
-                    if self.turn == PLAYER_TURN and xpos < (COLS - 0.5) * SQUARESIZE:
+                    if self.turn == PLAYER_TURN and xpos < (utils.COLS - 0.5) * SQUARESIZE:
                         pygame.draw.circle(SCREEN, RED, (xpos, int(SQUARESIZE / 2)), CIRCLE_RADIUS)
+                    self.draw_board(utils.current_numboard)
 
                 # Add Piece
                 xpos = pygame.mouse.get_pos()[0]
-                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over and xpos < COLS * SQUARESIZE and DEPTH > 0:
+                if event.type == pygame.MOUSEBUTTONDOWN and xpos < utils.COLS * SQUARESIZE and K > 0:
                     pygame.draw.rect(SCREEN, GRAY, (0, 0, WIDTH - SIDEBAR_WIDTH, SQUARESIZE))
                     if self.turn == PLAYER_TURN:
                         xpos = event.pos[0]
@@ -291,52 +315,37 @@ class MainGame:
 
                         if utils.is_valid_move(col):
                             utils.make_move(col, utils.HUMAN)
+                        else:
+                            break
 
-                        self.board = utils.current_numboard
-                        self.draw_board(self.board)
-                        self.turn += 1
-                        self.turn = self.turn % 2
+                        self.draw_board(utils.current_numboard)
+                        self.turn = AI_TURN
 
-                if utils.is_game_over():
-                    self.game_over = True
+            if utils.is_game_over():
+                continue
 
             if self.turn == AI_TURN and not self.game_over:
-                DEPTH = 5
-                best_move_score = float("-inf")
-                best_move_node = None
-                best_move_column = None
+                if method == 1:
+                    solver = Minimax(utils.current_bitboard, K, True)
+                else:
+                    solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
 
-                for move in utils.GET_POSSIBLE_MOVES(utils.current_bitboard):
-                    new_bitboard = utils.MAKE_MOVE(utils.current_bitboard, move, 1)
-                    print(bin(new_bitboard))
-                    if METHOD == 1:
-                        solver = Minimax(new_bitboard, DEPTH, True)
-                    else:
-                        solver = MinimaxAlphaBeta(new_bitboard, DEPTH, True)
-                    root, path = solver.solve()
-                    best_move_score = max(best_move_score, root.score)
-                    best_move_node = root if best_move_score == root.score else best_move_node
-                    best_move_column = move if best_move_score == root.score else best_move_column
+                col, tree, path = solver.solve()
 
-                print('BEST MOVE SCORE', best_move_node.score)
-                pygame.time.wait(500)
-                utils.make_move(best_move_column, utils.COMPUTER)
+                sidebar.tree = tree
 
-                self.board = utils.current_numboard
-                self.draw_board(self.board)
-                self.turn += 1
-                self.turn = self.turn % 2
+                # pygame.time.wait(500)
+                utils.make_move(col, utils.COMPUTER)
 
-                if utils.is_game_over():
-                    self.game_over = True
-
-            pygame.display.update()
+                self.draw_board(utils.current_numboard)
+                self.turn = PLAYER_TURN
 
 
-DEPTH = input(".:Enter DEPTH: ")
-DEPTH = int(DEPTH)
-METHOD = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
-METHOD = int(METHOD)
+K = input(".:Enter K: ")
+K = int(K)
+method = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
+method = int(method)
+
 # Initialize pygame
 pygame.init()
 
