@@ -46,12 +46,12 @@ class Sidebar:
     def __init__(self, font):
         self.font = font
         self.tree_button = Button(font, "Show Game Tree", utils.COLS * SQUARESIZE + 10,
-                                  150, BUTTON_WIDTH, BUTTON_HEIGHT)
-        self.reset_button = Button(font, "Reset", (utils.COLS + 2.47) * SQUARESIZE, 150, BUTTON_WIDTH / 1.5,
+                                  200, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.reset_button = Button(font, "Reset", (utils.COLS + 2.47) * SQUARESIZE, 200, BUTTON_WIDTH / 1.5,
                                    BUTTON_HEIGHT)
         self.my_font = pygame.font.SysFont("monospace", 25, bold=True)
         self.data_font = pygame.font.SysFont("monospace", 20, bold=True)
-        self.graph_shown = False
+        self.graph_shown = True
         self.game_tree = GameTree(SCREEN)
         self.tree = None
 
@@ -65,10 +65,10 @@ class Sidebar:
         pygame.draw.rect(SCREEN, GRAY, (utils.COLS * SQUARESIZE, 0, SIDEBAR_WIDTH, HEIGHT))
 
         # Adjusting Position
-        SCREEN.blit(player_score_text, (utils.COLS * SQUARESIZE + 10, 50))
+        SCREEN.blit(player_score_text, (utils.COLS * SQUARESIZE + 10, 100))
         SCREEN.blit(nodes_expanded_text, (utils.COLS * SQUARESIZE + 20, 630))
         SCREEN.blit(time_text, (utils.COLS * SQUARESIZE + 20, 660))
-        SCREEN.blit(ai_score_text, (utils.COLS * SQUARESIZE + 10, 100))
+        SCREEN.blit(ai_score_text, (utils.COLS * SQUARESIZE + 10, 150))
 
         self.tree_button.draw(SCREEN, DARK_BLUE)
         self.reset_button.draw(SCREEN, RED)
@@ -86,8 +86,8 @@ class GameTree:
     def __init__(self, screen, node_radius=20):
         self.screen = screen
         self.node_radius = node_radius
-        self.node_positions = {}  # Store positions of all nodes
         self.root_position = []
+        self.node_positions = {}
 
         self.font = pygame.font.SysFont(None, 30)
         self.edge_color = (255, 255, 255)
@@ -110,7 +110,8 @@ class GameTree:
         self._draw_node(root_position, root_node)
         root_position[0] = root_position[0] - 40
         node_positions[root_node] = root_position
-        self._draw_child_nodes(root_position, root_node.children, spacing, 1)
+        self._draw_child_nodes(root_position, root_node.children, spacing, 1, node_positions)
+        self.node_positions = node_positions
         self.draw_options(root_node.is_maximizing_player)
         if self.rendered_node:
             self.render_state()
@@ -138,7 +139,7 @@ class GameTree:
         text_position = (x - text_width // 2, y - text_height // 2)
         self.screen.blit(text, text_position)
 
-    def _draw_child_nodes(self, parent_position, nodes, spacing, level):
+    def _draw_child_nodes(self, parent_position, nodes, spacing, level, node_positions):
         if not nodes:
             return
 
@@ -149,7 +150,7 @@ class GameTree:
             y = parent_position[1] + level * spacing[1] * 1.5
 
             self._draw_node((int(x), int(y)), node)
-            self.node_positions[node] = (x, y)
+            node_positions[node] = (x, y)
 
             # Draw an edge to the parent node
             line_position = (parent_position[0] + 40, parent_position[1] + 25)
@@ -161,10 +162,6 @@ class GameTree:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            if self.rendered_node:
-                self.render_state()
-            if self.root_node:
-                self.draw_options(self.root_node.is_maximizing_player)
             if event.type == pygame.MOUSEMOTION:
                 x, y = event.pos
                 if x < 700 and y < 230:
@@ -175,8 +172,6 @@ class GameTree:
                     distance = (dx ** 2 + dy ** 2) ** 0.5
                     if distance < self.node_radius * 1.25:
                         self.hovered_node = node
-                        # TODO convert bitboard into 2D board
-                        #  self.main_game.draw_board(board)
                         break
                 else:
                     self.hovered_node = None
@@ -187,6 +182,9 @@ class GameTree:
                         self.rendered_node = self.hovered_node
                         self.state_rendered = True
                         self.render_state()
+                        # game = MainGame()
+                        # board = utils.bitboard_to_array(self.rendered_node.bitboard)
+                        # game.draw_board(board)
                         current_time = pygame.time.get_ticks()
                         if current_time - self.last_click_time < self.double_click_delay:
                             # Double-click event
@@ -195,16 +193,8 @@ class GameTree:
                             if self.rendered_node != self.root_node:
                                 print(self.rendered_node.bitboard)
                                 self.root_node = self.rendered_node
-                                # print(self.rendered_node.bitboard)
-                                self.render_state()
-                                self.draw_options(self.rendered_node.is_maximizing_player)
+                                sidebar.tree = self.root_node
                                 print("Child Node Clicked")
-                                return
-                            elif self.rendered_node.is_maximizing_player and self.root_node.is_maximizing_player or not self.rendered_node.is_maximizing_player and not self.rendered_node.is_maximizing_player:
-                                if not self.rendered_node.parent:
-                                    print("Parent Node does not exist")
-                                else:
-                                    print("Parent Exists: ")
                                 return
                         else:
                             # Single-click event
@@ -289,11 +279,11 @@ class MainGame:
                 # Clicks on the sidebar
                 if event.type == pygame.MOUSEBUTTONDOWN and K > 0:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
-                    if sidebar.tree_button.rect.collidepoint(mouse_x, mouse_y):
-                        if sidebar.tree:
-                            sidebar.graph_shown = True
-                            # self.initial_node_shown = True
-                    elif sidebar.reset_button.rect.collidepoint(mouse_x, mouse_y):
+                    # if sidebar.tree_button.rect.collidepoint(mouse_x, mouse_y):
+                    #     if sidebar.tree:
+                    #         sidebar.graph_shown = True
+                    #         # self.initial_node_shown = True
+                    if sidebar.reset_button.rect.collidepoint(mouse_x, mouse_y):
                         self.reset_data()
                         break
 
@@ -322,6 +312,10 @@ class MainGame:
                         self.turn = AI_TURN
 
             if utils.is_game_over():
+                if ai_score < player_score:
+                    print("You are winner")
+                else:
+                    print("You Lost!!")
                 continue
 
             if self.turn == AI_TURN and not self.game_over:
