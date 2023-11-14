@@ -1,11 +1,11 @@
 class TreeNode:
-    def __init__(self, bitboard, depth, is_maximizing_player):
+    def __init__(self, bitboard, depth, is_maximizing_player, score=None):
         self.data = None
         self.bitboard = bitboard
         self.depth = depth
         self.is_maximizing_player = is_maximizing_player
         self.children = []
-        self.score = None
+        self.score = score if score else float("-inf") if is_maximizing_player else float("inf")
 
     def add_child(self, child):
         child.parent = self
