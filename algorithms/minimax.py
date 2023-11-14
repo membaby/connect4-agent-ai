@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils import *
 from tree_node import TreeNode
 from heuristics import heuristic_evaluation
@@ -78,7 +82,7 @@ if __name__ == '__main__':
 
     for move in GET_POSSIBLE_MOVES(bitboard):
         new_bitboard = MAKE_MOVE(bitboard, move, 1)
-        MinimaxAlpha = Minimax(new_bitboard, 7, True)
+        MinimaxAlpha = Minimax(new_bitboard, 5, True)
         root, path = MinimaxAlpha.solve()
         best_move_score = max(best_move_score, root.score)
         best_move_node = root if best_move_score == root.score else best_move_node

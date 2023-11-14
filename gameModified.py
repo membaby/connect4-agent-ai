@@ -3,8 +3,8 @@ import sys
 import random
 import math
 import time
-import utils
-import tree_node
+import utils as utils
+import tree_node as tree_node
 from algorithms.minimax import Minimax
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
 
@@ -37,7 +37,7 @@ BUTTON_HEIGHT = 40
 player_score = 0
 ai_score = 0
 other_data = 0
-K = 0
+DEPTH = 0
 METHOD = None
 
 class GameTree:
@@ -223,18 +223,16 @@ class MainGame:
         self.draw_board(self.board)
         pygame.display.update()
         self.bitboard = utils.current_bitboard
-        self.miniMax = Minimax(self.bitboard, K, True)
-        self.miniMaxAlphaBeta = MinimaxAlphaBeta(self.bitboard, K, True)
 
     def reset_data(self):
-        K = 0
+        DEPTH = 0
         ai_score = 0
         player_score = 0
         other_data = 0
         METHOD = None
-        K = input(".:Enter K: ")
+        DEPTH = input(".:Enter DEPTH: ")
         METHOD = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
-        K = int(K)
+        DEPTH = int(DEPTH)
         METHOD = int(METHOD)
         utils.initialize_board()
         self.board = utils.current_numboard
@@ -260,6 +258,7 @@ class MainGame:
         pygame.display.update()
 
     def run(self):
+        global DEPTH
         while not self.game_over:
             sidebar.draw()
             for event in pygame.event.get():
@@ -267,7 +266,7 @@ class MainGame:
                     sys.exit()
 
                 # Clicks on the sidebar
-                if event.type == pygame.MOUSEBUTTONDOWN and K > 0:
+                if event.type == pygame.MOUSEBUTTONDOWN and DEPTH > 0:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
                     if sidebar.tree_button.rect.collidepoint(mouse_x, mouse_y):
                         sidebar.graph_shown = True
@@ -284,7 +283,7 @@ class MainGame:
 
                 # Add Piece
                 xpos = pygame.mouse.get_pos()[0]
-                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over and xpos < COLS * SQUARESIZE and K > 0:
+                if event.type == pygame.MOUSEBUTTONDOWN and not self.game_over and xpos < COLS * SQUARESIZE and DEPTH > 0:
                     pygame.draw.rect(SCREEN, GRAY, (0, 0, WIDTH - SIDEBAR_WIDTH, SQUARESIZE))
                     if self.turn == PLAYER_TURN:
                         xpos = event.pos[0]
@@ -302,19 +301,26 @@ class MainGame:
                     self.game_over = True
 
             if self.turn == AI_TURN and not self.game_over:
-                # tree = None
-                # path = None
-                # if METHOD == 1:
-                #     tree, path = self.miniMax.solve()
-                # else:
-                #     tree, path = self.miniMaxAlphaBeta.solve()
-                #
-                # #  TODO get the column where the new piece ia added
+                DEPTH = 5
+                best_move_score = float("-inf")
+                best_move_node = None
+                best_move_column = None
 
-                col = 1
-                if utils.is_valid_move(col):
-                    pygame.time.wait(500)
-                    utils.make_move(col, utils.COMPUTER)
+                for move in utils.GET_POSSIBLE_MOVES(utils.current_bitboard):
+                    new_bitboard = utils.MAKE_MOVE(utils.current_bitboard, move, 1)
+                    print(bin(new_bitboard))
+                    if METHOD == 1:
+                        solver = Minimax(new_bitboard, DEPTH, True)
+                    else:
+                        solver = MinimaxAlphaBeta(new_bitboard, DEPTH, True)
+                    root, path = solver.solve()
+                    best_move_score = max(best_move_score, root.score)
+                    best_move_node = root if best_move_score == root.score else best_move_node
+                    best_move_column = move if best_move_score == root.score else best_move_column
+
+                print('BEST MOVE SCORE', best_move_node.score)
+                pygame.time.wait(500)
+                utils.make_move(best_move_column, utils.COMPUTER)
 
                 self.board = utils.current_numboard
                 self.draw_board(self.board)
@@ -327,8 +333,8 @@ class MainGame:
             pygame.display.update()
 
 
-K = input(".:Enter K: ")
-K = int(K)
+DEPTH = input(".:Enter DEPTH: ")
+DEPTH = int(DEPTH)
 METHOD = input(".:Enter Method\n1. Without Alpha Beta\n2. With Alpha Beta\n")
 METHOD = int(METHOD)
 # Initialize pygame
