@@ -16,7 +16,7 @@ class Minimax:
             # return the score
             return TreeNode(bitboard, depth, heuristic_evaluation(bitboard), maximizing_player, parent)
 
-        node = TreeNode(bitboard, depth, heuristic_evaluation(bitboard), maximizing_player, parent)
+        node = TreeNode(bitboard, depth, None, maximizing_player, parent)
 
         if maximizing_player:
             max_eval = float('-inf')

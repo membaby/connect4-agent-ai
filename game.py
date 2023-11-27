@@ -10,8 +10,8 @@ from algorithms.minimax import Minimax
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
 
 # Constants
-PLAYER_TURN = 0
-AI_TURN = 1
+PLAYER_TURN = 1
+AI_TURN = 0
 
 # Colors
 BLUE = (0, 0, 255)
@@ -102,7 +102,7 @@ class GameTree:
 
     def draw_tree(self, root_node, spacing):
         if not root_node:
-            print("No nodes provided.")
+            # print("No nodes provided.")
             return
         self.root_node = root_node
         node_positions = {}
@@ -228,7 +228,7 @@ class MainGame:
         utils.initialize_board()
         self.game_over = False
 
-        self.turn = random.randint(PLAYER_TURN, AI_TURN)
+        self.turn = random.randint(AI_TURN, PLAYER_TURN)
         self.my_font = pygame.font.SysFont("monospace", 20, bold=True)
         self.draw_board(utils.current_numboard)
 
@@ -324,9 +324,22 @@ class MainGame:
                 else:
                     solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
 
-                col, tree, path = solver.solve()
+                best_move_score = float("-inf")
+                best_move_node = None
+                best_move_col = None
 
-                sidebar.tree = tree
+                print(utils.current_bitboard)
+
+                for move in utils.GET_POSSIBLE_MOVES(utils.current_bitboard):
+                    new_bitboard = utils.MAKE_MOVE(utils.current_bitboard, move, 1)
+                    col, root, path = solver.solve()
+                    best_move_score = max(best_move_score, root.score)
+                    best_move_node = root if best_move_score == root.score else best_move_node
+                    best_move_col = move if best_move_score == root.score else best_move_col
+                    print(f'(MOVE: {move}) (SCORE: {root.score}) NEW BOARD:', bin(new_bitboard))
+                # print(f"Best Move: {best_move_col}", f"Best Score: {best_move_score}")
+
+                sidebar.tree = root
 
                 # pygame.time.wait(500)
                 utils.make_move(col, utils.COMPUTER)
