@@ -97,7 +97,7 @@ def bitboard_to_array(bitboard):
 
     return numboard
 
-def print_board(bitboard):
+def print_board(bitboard, multiline=False):
     data = []
     for row in range(6):
         r = []
@@ -106,8 +106,11 @@ def print_board(bitboard):
             bit = (bitboard >> bit_position) & 1
             r.append(bit)
         data.append(r)
-
-    print(data[::-1])
+    if not multiline:
+        print(data[::-1])
+    else:
+        for row in data[::-1]:
+            print(row)
 
 if __name__ == '__main__':
     # initial_bitboard = int("100000001110000000110000000110000000101000001110000000000101010", 2)

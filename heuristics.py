@@ -4,11 +4,11 @@ import itertools
 def heuristic_evaluation(bitboard):
     ai_score = 0
     human_score = 0
-    ai_score += count_consecutive_pieces(bitboard, 'AI', 4) * 100
-    ai_score += count_consecutive_pieces(bitboard, 'AI', 3) * 5
+    ai_score += count_consecutive_pieces(bitboard, 'AI', 4) * 4
+    ai_score += count_consecutive_pieces(bitboard, 'AI', 3) * 3
     ai_score += count_consecutive_pieces(bitboard, 'AI', 2) * 2
-    human_score += count_consecutive_pieces(bitboard, 'Human', 4) * 100
-    human_score += count_consecutive_pieces(bitboard, 'Human', 3) * 5
+    human_score += count_consecutive_pieces(bitboard, 'Human', 4) * 4
+    human_score += count_consecutive_pieces(bitboard, 'Human', 3) * 3
     human_score += count_consecutive_pieces(bitboard, 'Human', 2) * 2
     return ai_score - human_score
 

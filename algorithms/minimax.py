@@ -19,13 +19,9 @@ class Minimax:
             max_eval = float('-inf')
             for col in GET_POSSIBLE_MOVES(bitboard):
                 new_board = MAKE_MOVE(bitboard, col, 0)
-                ##problem
-                child_node = self.generate_minimax_tree(depth - 1, new_board, False, node)
+                child_node = self.generate_minimax_tree(depth-1, new_board, False, node)
                 node.children.append(child_node)
                 max_eval = max(max_eval, child_node.score)
-                # if max_eval==eval:
-                # what happens if max_eval==eval ?!?!?!?!?!?!?!?
-                ###problem
                 self.path.add(new_board)
             node.score = max_eval
             return node
@@ -34,13 +30,9 @@ class Minimax:
             min_eval = float('inf')
             for col in GET_POSSIBLE_MOVES(bitboard):
                 new_board = MAKE_MOVE(bitboard, col, 1)
-                ##problem
-                child_node = self.generate_minimax_tree(depth - 1, new_board, True, node)
+                child_node = self.generate_minimax_tree(depth-1, new_board, True, node)
                 node.children.append(child_node)
                 min_eval = min(min_eval, child_node.score)
-                # if min_eval==eval:
-                # what happens if min_eval==eval ?!?!?!?!?!?!?!?
-                ##problem
                 self.path.add(new_board)
             node.score = min_eval
             return node
@@ -49,7 +41,7 @@ class Minimax:
         root = self.generate_minimax_tree(self.max_depth, self.current_bitboard, self.maximizing_player, None)
         max_child = root.children[0]
         for child in root.children:
-            if child.score >= max_child.score:
+            if child.score > max_child.score:
                 max_child = child
         changed_column = GET_CHANGED_COLUMN(root.bitboard, max_child.bitboard)
         return changed_column, root, self.path
