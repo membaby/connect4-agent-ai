@@ -5,12 +5,18 @@ def heuristic_evaluation(bitboard):
     ai_score = 0
     human_score = 0
     ai_score += count_consecutive_pieces(bitboard, 'AI', 4) * 100
-    ai_score += count_consecutive_pieces(bitboard, 'AI', 3) * 10
-    ai_score += count_consecutive_pieces(bitboard, 'AI', 2) * 5
+    ai_score += count_consecutive_pieces(bitboard, 'AI', 3) * 5
+    ai_score += count_consecutive_pieces(bitboard, 'AI', 2) * 2
     human_score += count_consecutive_pieces(bitboard, 'Human', 4) * 100
-    human_score += count_consecutive_pieces(bitboard, 'Human', 3) * 30
-    human_score += count_consecutive_pieces(bitboard, 'Human', 2) * 10
+    human_score += count_consecutive_pieces(bitboard, 'Human', 3) * 5
+    human_score += count_consecutive_pieces(bitboard, 'Human', 2) * 2
     return ai_score - human_score
+
+def heuristic_evaluation_2(bitboard, player):
+    score = 0
+    score += count_consecutive_pieces(bitboard, player, 4)
+    return score
+
 
 def extract_nth_row(bitboard, n):               # lowest row is 0
     # Returns a new number representing the nth row, where each bit corresponds to a column.

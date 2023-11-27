@@ -1,7 +1,7 @@
 ROWS = 6
 COLS = 7
-HUMAN = 0
-COMPUTER = 1
+HUMAN = 1
+COMPUTER = 0
 EMPTY = 2
 
 current_bitboard = 0
@@ -23,15 +23,7 @@ def make_move(col, player):
             break
 
     # update bits board
-    col_bits = (current_bitboard >> ((6 - col) * 9)) & 0b111111111
-    index = (col_bits >> 6) & 0b111
-
-    col_bits |= player << (6 - index)
-    index -= 1
-    col_bits &= 0b000111111
-    col_bits |= index << 6
-    current_bitboard &= ~(0b111111111 << ((6 - col) * 9))
-    current_bitboard |= col_bits << ((6 - col) * 9)
+    current_bitboard = MAKE_MOVE(current_bitboard, col, player)
 
 
 def is_valid_move(col):
@@ -105,6 +97,17 @@ def bitboard_to_array(bitboard):
 
     return numboard
 
+def print_board(bitboard):
+    data = []
+    for row in range(6):
+        r = []
+        for col in range(7):
+            bit_position = col * 9 + row
+            bit = (bitboard >> bit_position) & 1
+            r.append(bit)
+        data.append(r)
+
+    print(data[::-1])
 
 if __name__ == '__main__':
     # initial_bitboard = int("100000001110000000110000000110000000101000001110000000000101010", 2)

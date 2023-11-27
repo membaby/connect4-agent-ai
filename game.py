@@ -324,27 +324,12 @@ class MainGame:
                 else:
                     solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
 
-                best_move_score = float("-inf")
-                best_move_node = None
-                best_move_col = None
-
-                print(utils.current_bitboard)
-
-                for move in utils.GET_POSSIBLE_MOVES(utils.current_bitboard):
-                    new_bitboard = utils.MAKE_MOVE(utils.current_bitboard, move, 1)
-                    col, root, path = solver.solve()
-                    best_move_score = max(best_move_score, root.score)
-                    best_move_node = root if best_move_score == root.score else best_move_node
-                    best_move_col = move if best_move_score == root.score else best_move_col
-                    print(f'(MOVE: {move}) (SCORE: {root.score}) NEW BOARD:', bin(new_bitboard))
-                # print(f"Best Move: {best_move_col}", f"Best Score: {best_move_score}")
-
+                col, root, path = solver.solve()
                 sidebar.tree = root
-
-                # pygame.time.wait(500)
                 utils.make_move(col, utils.COMPUTER)
 
                 self.draw_board(utils.current_numboard)
+                utils.print_board(utils.current_bitboard)
                 self.turn = PLAYER_TURN
 
 
