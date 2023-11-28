@@ -8,12 +8,14 @@ class Minimax:
         self.max_depth = max_depth
         self.maximizing_player = maximizing_player
         self.path = {bitboard}
+        self.expanded_nodes = 0
 
     def generate_minimax_tree(self, depth, bitboard, maximizing_player, parent):
         if depth == 0 or IS_GAME_OVER(bitboard):  # BASE CASE
             return TreeNode(bitboard, depth, heuristic_evaluation(bitboard), maximizing_player, parent)
 
         node = TreeNode(bitboard, depth, None, maximizing_player, parent)
+        self.expanded_nodes += 1
 
         if maximizing_player:
             max_eval = float('-inf')
@@ -44,4 +46,4 @@ class Minimax:
             if child.score > max_child.score:
                 max_child = child
         changed_column = GET_CHANGED_COLUMN(root.bitboard, max_child.bitboard)
-        return changed_column, root, self.path
+        return changed_column, root, self.path, self.expanded_nodes

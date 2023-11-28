@@ -5,6 +5,7 @@ import math
 import time
 
 import utils
+import heuristics
 import tree_node
 from algorithms.minimax import Minimax
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
@@ -270,6 +271,7 @@ class MainGame:
         pygame.display.update()
 
     def run(self):
+        global nodes_expanded, ai_score, player_score
         while not self.game_over:
             sidebar.draw()
             for event in pygame.event.get():
@@ -324,13 +326,19 @@ class MainGame:
                 else:
                     solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
 
-                col, root, path = solver.solve()
+                col, root, path, expanded_nodes = solver.solve()
                 sidebar.tree = root
+                nodes_expanded = expanded_nodes
                 utils.make_move(col, utils.COMPUTER)
 
                 self.draw_board(utils.current_numboard)
-                utils.print_board(utils.current_bitboard)
                 self.turn = PLAYER_TURN
+
+                # GET SCORE
+                ai_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'AI', 4)
+                player_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'Human', 4)
+                ai_score = ai_score_raw['vertical'] + ai_score_raw['horizontal'][0] + ai_score_raw['horizontal'][1] + ai_score_raw['diagonal'][0] + ai_score_raw['diagonal'][1]
+                player_score = player_score_raw['vertical'] + player_score_raw['horizontal'][0] + player_score_raw['horizontal'][1] + player_score_raw['diagonal'][0] + player_score_raw['diagonal'][1]
 
 
 K = input(".:Enter K: ")
