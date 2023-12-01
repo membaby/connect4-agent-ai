@@ -68,6 +68,9 @@ The performance analysis demonstrates that while the Minimax algorithm provides 
 
 <img src="img/algorithm-comparison-chart.png">
 
+## Game GUI
+<img src="img/game.gif">
+
 
 ## Notes
 - For simplicity, we performed all development and tests using a board with dimension of seven columns and six rows.
