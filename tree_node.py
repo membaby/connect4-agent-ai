@@ -1,3 +1,5 @@
+import graphviz
+
 class TreeNode:
     def __init__(self, bitboard, depth, score, is_maximizing_player, parent):
         self.data = None
@@ -8,50 +10,14 @@ class TreeNode:
         self.score = score
         self.parent = parent
 
-    def add_child(self, child):
-        child.parent = self
-        self.children.append(child)
+    def visualize_tree(self, node, graph=None):
+        if graph is None:
+            graph = graphviz.Digraph(comment='Minimax Tree')
 
-    def remove_child(self, child):
-        child.parent = None
-        self.children.remove(child)
+        graph.node(str(id(node)), label=str(node.bitboard)+', '+str(node.score))
 
-    def get_children(self):
-        return self.children
+        for child in node.children:
+            graph.edge(str(id(node)), str(id(child)))
+            self.visualize_tree(child, graph)
 
-    def get_data(self):
-        return self.data
-
-    def set_data(self, data):
-        self.data = data
-
-    def is_leaf(self):
-        return len(self.children) == 0
-
-    def is_root(self):
-        return self.parent is None
-
-    def depth(self):
-        if self.is_root():
-            return 0
-        else:
-            return self.parent.depth() + 1
-
-    def height(self):
-        if self.is_leaf():
-            return 0
-        else:
-            return max(child.height() for child in self.children) + 1
-
-    def size(self):
-        if self.is_leaf():
-            return 1
-        else:
-            return 1 + sum(child.size() for child in self.children)
-
-    def print_tree(self):
-        spaces = ' ' * 4 * self.depth()
-        prefix = spaces + '|__ ' if self.parent else ''
-        print(prefix + str(self.data))
-        for child in self.children:
-            child.print_tree()
+        return graph

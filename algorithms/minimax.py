@@ -7,7 +7,6 @@ class Minimax:
         self.current_bitboard = bitboard
         self.max_depth = max_depth
         self.maximizing_player = maximizing_player
-        self.path = {bitboard}
         self.expanded_nodes = 0
 
     def generate_minimax_tree(self, depth, bitboard, maximizing_player, parent):
@@ -22,9 +21,9 @@ class Minimax:
             for col in GET_POSSIBLE_MOVES(bitboard):
                 new_board = MAKE_MOVE(bitboard, col, 0)
                 child_node = self.generate_minimax_tree(depth-1, new_board, False, node)
+                self.expanded_nodes += 1
                 node.children.append(child_node)
                 max_eval = max(max_eval, child_node.score)
-                self.path.add(new_board)
             node.score = max_eval
             return node
 
@@ -35,7 +34,6 @@ class Minimax:
                 child_node = self.generate_minimax_tree(depth-1, new_board, True, node)
                 node.children.append(child_node)
                 min_eval = min(min_eval, child_node.score)
-                self.path.add(new_board)
             node.score = min_eval
             return node
 
@@ -46,4 +44,4 @@ class Minimax:
             if child.score > max_child.score:
                 max_child = child
         changed_column = GET_CHANGED_COLUMN(root.bitboard, max_child.bitboard)
-        return changed_column, root, self.path, self.expanded_nodes
+        return changed_column, root, self.expanded_nodes

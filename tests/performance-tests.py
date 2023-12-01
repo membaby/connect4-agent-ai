@@ -1,3 +1,11 @@
+import os
+import sys
+import inspect
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir) 
+
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
 from algorithms.minimax import Minimax
 from utils import *
@@ -6,11 +14,11 @@ from heuristics import count_consecutive_pieces
 import time
 
 if __name__ == '__main__':
-    TEST_GAMES = 20
-    DEPTH = 3
+    TEST_GAMES = 10
+    DEPTH = 2
     DEPTH_2 = 4
     DEBUG = False
-    ALGORITHM = 1 # 0: Minimax, 1: Minimax with Alpha-Beta Pruning
+    ALGORITHM = 0 # 0: Minimax, 1: Minimax with Alpha-Beta Pruning
     games = []
     times_taken = []
     total_nodes = []
@@ -23,7 +31,7 @@ if __name__ == '__main__':
                 solver = Minimax(bitboard, DEPTH, True)
             else:
                 solver = MinimaxAlphaBeta(bitboard, DEPTH, True)
-            changed_root, root, path, number_of_nodes_expanded = solver.solve()
+            changed_root, root, number_of_nodes_expanded = solver.solve()
             total_nodes.append(number_of_nodes_expanded)
             bitboard = MAKE_MOVE(bitboard, changed_root, 0)
             DEBUG and print(j, 'BEST MOVE', changed_root, root.score)
@@ -31,9 +39,6 @@ if __name__ == '__main__':
             move = random.choice(GET_POSSIBLE_MOVES(bitboard))
             bitboard = MAKE_MOVE(bitboard, move, 1)
             DEBUG and print(f'RANDOM MOVE: {move}')
-            # solver = MinimaxAlphaBeta(bitboard, DEPTH_2, True)
-            # changed_root, root_, path_, number_of_nodes_expanded_ = solver.solve()
-            # bitboard = MAKE_MOVE(bitboard, changed_root, 1)
         
         end_time = time.time()
         DEBUG and print_board(bitboard)
@@ -54,34 +59,3 @@ if __name__ == '__main__':
     if [game for game in games if game[0] == 'TT']:
         print('W/T Ratio:', len([game for game in games if game[0] == 'AA']) / len([game for game in games if game[0] == 'TT']))
     print('Average Time Taken:', round(sum(times_taken) / len(times_taken), 5))
-
-# TEST CERTAIN MOVE
-
-    # bitboard = 0b0110000000110000000110000000110000000110000000110000000110000000 # Empty Board
-    # bitboard = MAKE_MOVE(bitboard, 0, 1)
-    # bitboard = MAKE_MOVE(bitboard, 0, 1)
-    # bitboard = MAKE_MOVE(bitboard, 0, 1)
-    # bitboard = MAKE_MOVE(bitboard, 1, 1)
-    # bitboard = MAKE_MOVE(bitboard, 2, 1)
-    # bitboard = MAKE_MOVE(bitboard, 3, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 1, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 2, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 3, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 4, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 5, 1)
-    # # bitboard = MAKE_MOVE(bitboard, 6, 1)
-    # print_board(bitboard, True)
-    
-    # start_time = time.time()
-    # solver = MinimaxAlphaBeta(bitboard, 5, True)
-    # changed_root, root, path = solver.solve()
-    # end_time = time.time()
-    # print(changed_root, root.score)
-    # start_time = time.time()
-    # solver = Minimax(bitboard, 5, True)
-    # changed_root, root, path = solver.solve()
-    # end_time = time.time()
-    # print(changed_root, root.score)
-    # # bitboard = MAKE_MOVE(bitboard, changed_root, 0)
-    # # print_board(bitboard, True)
-    # # print('Time Taken:', end_time - start_time)

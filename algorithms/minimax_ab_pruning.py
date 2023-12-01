@@ -7,7 +7,6 @@ class MinimaxAlphaBeta:
         self.current_bitboard = bitboard
         self.max_depth = max_depth
         self.maximizing_player = maximizing_player
-        self.path = {bitboard}
         self.alpha = float("-inf")
         self.beta = float("inf")
         self.expanded_nodes = 0
@@ -17,17 +16,16 @@ class MinimaxAlphaBeta:
             return TreeNode(bitboard, depth, heuristic_evaluation(bitboard), maximizing_player, parent)
 
         node = TreeNode(bitboard, depth, None, maximizing_player, parent)
-        self.expanded_nodes += 1
 
         if maximizing_player:
             max_score = float("-inf")
             for column in GET_POSSIBLE_MOVES(bitboard):
                 new_bitboard = MAKE_MOVE(bitboard, column, 0)
                 child_node = self.generate_minimax_tree(depth-1, new_bitboard, alpha, beta, False, node)
+                self.expanded_nodes += 1
                 node.children.append(child_node)
                 max_score = max(max_score, child_node.score)
                 alpha = max(alpha, max_score)
-                self.path.add(new_bitboard)
                 if beta <= alpha:
                     break
             node.score = max_score
@@ -40,7 +38,6 @@ class MinimaxAlphaBeta:
                 node.children.append(child_node)
                 min_score = min(min_score, child_node.score)
                 beta = min(beta, min_score)
-                self.path.add(new_bitboard)
                 if beta <= alpha:
                     break
             node.score = min_score
@@ -53,4 +50,4 @@ class MinimaxAlphaBeta:
             if child.score > max_child.score:
                 max_child = child
         changed_column = GET_CHANGED_COLUMN(root.bitboard, max_child.bitboard)
-        return changed_column, root, self.path, self.expanded_nodes
+        return changed_column, root, self.expanded_nodes

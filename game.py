@@ -6,7 +6,6 @@ import time
 
 import utils
 import heuristics
-import tree_node
 from algorithms.minimax import Minimax
 from algorithms.minimax_ab_pruning import MinimaxAlphaBeta
 
@@ -24,7 +23,7 @@ WHITE = (255, 255, 255)
 
 # Constants Dimensions
 SQUARESIZE = 100
-SIDEBAR_WIDTH = 390
+SIDEBAR_WIDTH = 550
 WIDTH = utils.COLS * SQUARESIZE + SIDEBAR_WIDTH
 HEIGHT = (utils.ROWS + 1) * SQUARESIZE
 CIRCLE_RADIUS = int(SQUARESIZE / 2 - 5)
@@ -46,9 +45,9 @@ method = None
 class Sidebar:
     def __init__(self, font):
         self.font = font
-        self.tree_button = Button(font, "Show Game Tree", utils.COLS * SQUARESIZE + 10,
-                                  200, BUTTON_WIDTH, BUTTON_HEIGHT)
-        self.reset_button = Button(font, "Reset", (utils.COLS + 2.47) * SQUARESIZE, 200, BUTTON_WIDTH / 1.5,
+        # self.tree_button = Button(font, "Show Game Tree", utils.COLS * SQUARESIZE + 10,
+        #                           200, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.reset_button = Button(font, "Reset", utils.COLS * SQUARESIZE + 10, 200, BUTTON_WIDTH,
                                    BUTTON_HEIGHT)
         self.my_font = pygame.font.SysFont("monospace", 25, bold=True)
         self.data_font = pygame.font.SysFont("monospace", 20, bold=True)
@@ -56,7 +55,17 @@ class Sidebar:
         self.game_tree = GameTree(SCREEN)
         self.tree = None
 
-    def draw(self):
+    def draw(self, ai_score, player_score, nodes_expanded):
+        if utils.is_game_over():
+            if ai_score < player_score:
+                winner_text = self.my_font.render(f"You are winner!!", True, BLUE)
+            elif ai_score > player_score:
+                winner_text = self.my_font.render("You Lost!!", True, RED)
+            else:
+                winner_text = self.my_font.render("TIE", True, GRAY)
+
+            SCREEN.blit(winner_text, (utils.COLS * SQUARESIZE + 10, 100))
+
         player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE)
         ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE)
         nodes_expanded_text = self.data_font.render(f"Nodes Expanded: {nodes_expanded}", 1, DARK_BLUE)
@@ -71,10 +80,10 @@ class Sidebar:
         SCREEN.blit(time_text, (utils.COLS * SQUARESIZE + 20, 660))
         SCREEN.blit(ai_score_text, (utils.COLS * SQUARESIZE + 10, 150))
 
-        self.tree_button.draw(SCREEN, DARK_BLUE)
+        # self.tree_button.draw(SCREEN, DARK_BLUE)
         self.reset_button.draw(SCREEN, RED)
         if self.graph_shown:
-            spacing = (55, 55)
+            spacing = (73, 73)
             self.game_tree.draw_tree(self.tree, spacing)
             x, y = pygame.mouse.get_pos()
             if x > 700 and y > 230:
@@ -84,13 +93,13 @@ class Sidebar:
 
 
 class GameTree:
-    def __init__(self, screen, node_radius=20):
+    def __init__(self, screen, node_radius=30):
         self.screen = screen
         self.node_radius = node_radius
         self.root_position = []
         self.node_positions = {}
 
-        self.font = pygame.font.SysFont(None, 30)
+        self.font = pygame.font.SysFont(None, 25)
         self.edge_color = (255, 255, 255)
         self.last_click_time = 0
         self.double_click_delay = 500  # Adjust this value as needed (in milliseconds)
@@ -118,17 +127,19 @@ class GameTree:
             self.render_state()
 
     def draw_options(self, is_min):
+        font = pygame.font.SysFont(None, 35)
         min_max_text_position = (root_position[0] + 75, root_position[1] - 20)
         if not is_min:
-            min_max_text = self.font.render("MIN NODE", True, RED)
+            min_max_text = font.render("MIN NODE", True, RED)
         else:
-            min_max_text = self.font.render("MAX NODE", True, DARK_BLUE)
+            min_max_text = font.render("MAX NODE", True, DARK_BLUE)
 
         self.screen.blit(min_max_text, min_max_text_position)
 
     def render_state(self):
-        position = ((utils.COLS + 0.5) * SQUARESIZE, (utils.ROWS - 2) * SQUARESIZE + 25)
-        text = self.font.render(f"State: {self.rendered_node.bitboard}", True, DARK_BLUE)
+        font = pygame.font.SysFont(None, 35)
+        position = ((utils.COLS + 0.5) * SQUARESIZE, (utils.ROWS - 1.5) * SQUARESIZE + 25)
+        text = font.render(f"State: {self.rendered_node.bitboard}", True, DARK_BLUE)
         self.screen.blit(text, position)
 
     def _draw_node(self, position, node):
@@ -273,7 +284,8 @@ class MainGame:
     def run(self):
         global nodes_expanded, ai_score, player_score
         while not self.game_over:
-            sidebar.draw()
+
+            sidebar.draw(ai_score, player_score, nodes_expanded)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
@@ -316,17 +328,18 @@ class MainGame:
             if utils.is_game_over():
                 if ai_score < player_score:
                     print("You are winner")
-                else:
+                elif player_score < ai_score:
                     print("You Lost!!")
-                continue
+                else:
+                    print("TIE!!")
 
-            if self.turn == AI_TURN and not self.game_over:
+            if self.turn == AI_TURN and not utils.is_game_over():
                 if method == 1:
                     solver = Minimax(utils.current_bitboard, K, True)
                 else:
                     solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
 
-                col, root, path, expanded_nodes = solver.solve()
+                col, root, expanded_nodes = solver.solve()
                 sidebar.tree = root
                 nodes_expanded = expanded_nodes
                 utils.make_move(col, utils.COMPUTER)
