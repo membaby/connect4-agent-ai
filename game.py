@@ -36,7 +36,7 @@ root_position = [utils.COLS * SQUARESIZE + SIDEBAR_WIDTH / 2 - 50, 3 * SQUARESIZ
 # Global variables
 player_score = 0
 ai_score = 0
-time = 0
+time_lbl = 0
 nodes_expanded = 0
 K = 0
 method = None
@@ -69,7 +69,7 @@ class Sidebar:
         player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE)
         ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE)
         nodes_expanded_text = self.data_font.render(f"Nodes Expanded: {nodes_expanded}", 1, DARK_BLUE)
-        time_text = self.data_font.render(f"Time: {time}", 1, DARK_BLUE)
+        time_text = self.data_font.render(f"Time: {time_lbl}", 1, DARK_BLUE)
 
         # Sidebar rectangle
         pygame.draw.rect(SCREEN, GRAY, (utils.COLS * SQUARESIZE, 0, SIDEBAR_WIDTH, HEIGHT))
@@ -247,11 +247,11 @@ class MainGame:
         pygame.display.update()
 
     def reset_data(self):
-        global K, ai_score, player_score, time, nodes_expanded, method
+        global K, ai_score, player_score, time_lbl, nodes_expanded, method
         K = 0
         ai_score = 0
         player_score = 0
-        time = 0
+        time_lbl = 0
         nodes_expanded = 0
         method = None
         K = input(".:Enter K: ")
@@ -282,7 +282,7 @@ class MainGame:
         pygame.display.update()
 
     def run(self):
-        global nodes_expanded, ai_score, player_score
+        global nodes_expanded, ai_score, player_score, time_lbl
         while not self.game_over:
 
             sidebar.draw(ai_score, player_score, nodes_expanded)
@@ -325,19 +325,23 @@ class MainGame:
                         self.draw_board(utils.current_numboard)
                         self.turn = AI_TURN
 
-            if utils.is_game_over():
-                if ai_score < player_score:
-                    print("You are winner")
-                elif player_score < ai_score:
-                    print("You Lost!!")
-                else:
-                    print("TIE!!")
+            # if utils.is_game_over():
+                # if ai_score < player_score:
+                #     print("You are winner")
+                # elif player_score < ai_score:
+                #     print("You Lost!!")
+                # else:
+                #     print("TIE!!")
 
             if self.turn == AI_TURN and not utils.is_game_over():
+                start = time.time()
                 if method == 1:
                     solver = Minimax(utils.current_bitboard, K, True)
                 else:
                     solver = MinimaxAlphaBeta(utils.current_bitboard, K, True)
+                end = time.time()
+
+                time_lbl = round(end - start, 6)
 
                 col, root, expanded_nodes = solver.solve()
                 sidebar.tree = root
@@ -350,8 +354,10 @@ class MainGame:
                 # GET SCORE
                 ai_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'AI', 4)
                 player_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'Human', 4)
-                ai_score = ai_score_raw['vertical'] + ai_score_raw['horizontal'][0] + ai_score_raw['horizontal'][1] + ai_score_raw['diagonal'][0] + ai_score_raw['diagonal'][1]
-                player_score = player_score_raw['vertical'] + player_score_raw['horizontal'][0] + player_score_raw['horizontal'][1] + player_score_raw['diagonal'][0] + player_score_raw['diagonal'][1]
+                ai_score = ai_score_raw['vertical'] + sum(ai_score_raw['horizontal']) + sum(ai_score_raw['diagonal'])
+                player_score = player_score_raw['vertical'] + sum(player_score_raw['horizontal']) + sum(player_score_raw['diagonal'])
+
+                print('AI:', ai_score_raw, 'PLAYER:', player_score_raw)
 
 
 K = input(".:Enter K: ")
