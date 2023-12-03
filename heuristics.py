@@ -1,5 +1,6 @@
 from utils import *
 import itertools
+from rich import print
 
 def heuristic_evaluation(bitboard):
     ai_score = 0
@@ -160,13 +161,13 @@ def count_consecutive_pieces(bitboard, player, num_pieces):
                     i += 4
                 else:
                     i += 1
-                    
+
 
     diagonals = get_all_diagonals(horizontal_rows)
     for diagonal in diagonals:
         if num_pieces == 4:
             for j in range(7 - num_pieces + 1):
-                if (row & (mask << j)) == ((mask << j) * player_bit):
+                if diagonal[j:j+num_pieces] == [player_bit] * num_pieces:
                     counts['diagonal'][0] += 1
         else:
             sequence_permutations = [list(x) for x in set(itertools.permutations([player_bit] * num_pieces + [-1] * (4-num_pieces))) if num_pieces != 3 or x not in [(0, 0, 0, -1), (-1, 0, 0, 0), (1, 1, 1, -1), (-1, 1, 1, 1)]]
