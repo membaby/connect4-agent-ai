@@ -1,4 +1,5 @@
 import pygame
+import pygame.freetype
 import sys
 import random
 import math
@@ -14,16 +15,18 @@ PLAYER_TURN = 1
 AI_TURN = 0
 
 # Colors
+WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
-GRAY = (233, 233, 233)
-DARK_BLUE = (51, 54, 82)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
+GRAY = (23, 8, 82)
+DARK_BLUE = (72, 56, 172)
+DARK_BLUE_2 = (159, 130, 255)
+RED = (198, 46, 92)
+YELLOW = (247, 206, 70)
 WHITE = (255, 255, 255)
 
 # Constants Dimensions
 SQUARESIZE = 100
-SIDEBAR_WIDTH = 550
+SIDEBAR_WIDTH = 600
 WIDTH = utils.COLS * SQUARESIZE + SIDEBAR_WIDTH
 HEIGHT = (utils.ROWS + 1) * SQUARESIZE
 CIRCLE_RADIUS = int(SQUARESIZE / 2 - 5)
@@ -40,41 +43,43 @@ time_lbl = 0
 nodes_expanded = 0
 K = 0
 method = None
+display_message = ''
 
 
 class Sidebar:
     def __init__(self, font):
         self.font = font
-        # self.tree_button = Button(font, "Show Game Tree", utils.COLS * SQUARESIZE + 10,
-        #                           200, BUTTON_WIDTH, BUTTON_HEIGHT)
-        self.reset_button = Button(font, "Reset", utils.COLS * SQUARESIZE + 10, 200, BUTTON_WIDTH,
-                                   BUTTON_HEIGHT)
-        self.my_font = pygame.font.SysFont("monospace", 25, bold=True)
-        self.data_font = pygame.font.SysFont("monospace", 20, bold=True)
+        self.reset_button = Button(font, "Reset", utils.COLS * SQUARESIZE + 10, 200, BUTTON_WIDTH, BUTTON_HEIGHT)
+        self.export_button = Button(font, "Export Tree", utils.COLS * SQUARESIZE + 220, 200, BUTTON_WIDTH, BUTTON_HEIGHT)
+
+        self.my_font = pygame.font.Font("img/Good-Game.ttf", 35)
+        self.data_font = pygame.font.Font("img/Good-Game.ttf", 30)
+
         self.graph_shown = True
         self.game_tree = GameTree(SCREEN)
         self.tree = None
 
     def draw(self, ai_score, player_score, nodes_expanded):
+        global display_message
         if utils.is_game_over():
             if ai_score < player_score:
-                winner_text = self.my_font.render(f"You are winner!!", True, BLUE)
+                display_message = 'You won!'
             elif ai_score > player_score:
-                winner_text = self.my_font.render("You Lost!!", True, RED)
+                display_message = 'You lost!'
             else:
-                winner_text = self.my_font.render("TIE", True, GRAY)
+                display_message = 'Tie!'
 
-            SCREEN.blit(winner_text, (utils.COLS * SQUARESIZE + 10, 100))
-
-        player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE)
-        ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE)
-        nodes_expanded_text = self.data_font.render(f"Nodes Expanded: {nodes_expanded}", 1, DARK_BLUE)
-        time_text = self.data_font.render(f"Time: {time_lbl}", 1, DARK_BLUE)
+        msg_text = self.my_font.render(display_message, 1, WHITE)
+        player_score_text = self.my_font.render(f"Player Score: {player_score}", 1, DARK_BLUE_2)
+        ai_score_text = self.my_font.render(f"AI Score: {ai_score}", 1, DARK_BLUE_2)
+        nodes_expanded_text = self.data_font.render(f"Nodes Expanded: {nodes_expanded}", 1, DARK_BLUE_2)
+        time_text = self.data_font.render(f"Time: {time_lbl}", 1, DARK_BLUE_2)
 
         # Sidebar rectangle
         pygame.draw.rect(SCREEN, GRAY, (utils.COLS * SQUARESIZE, 0, SIDEBAR_WIDTH, HEIGHT))
 
         # Adjusting Position
+        SCREEN.blit(msg_text, (utils.COLS * SQUARESIZE + 10, 50))
         SCREEN.blit(player_score_text, (utils.COLS * SQUARESIZE + 10, 100))
         SCREEN.blit(nodes_expanded_text, (utils.COLS * SQUARESIZE + 20, 630))
         SCREEN.blit(time_text, (utils.COLS * SQUARESIZE + 20, 660))
@@ -82,6 +87,7 @@ class Sidebar:
 
         # self.tree_button.draw(SCREEN, DARK_BLUE)
         self.reset_button.draw(SCREEN, RED)
+        self.export_button.draw(SCREEN, BLUE)
         if self.graph_shown:
             spacing = (73, 73)
             self.game_tree.draw_tree(self.tree, spacing)
@@ -127,19 +133,19 @@ class GameTree:
             self.render_state()
 
     def draw_options(self, is_min):
-        font = pygame.font.SysFont(None, 35)
-        min_max_text_position = (root_position[0] + 75, root_position[1] - 20)
+        font = pygame.font.Font("img/Good-Game.ttf", 25)
+        min_max_text_position = (root_position[0] + 90, root_position[1] - 20)
         if not is_min:
             min_max_text = font.render("MIN NODE", True, RED)
         else:
-            min_max_text = font.render("MAX NODE", True, DARK_BLUE)
+            min_max_text = font.render("MAX NODE", True, DARK_BLUE_2)
 
         self.screen.blit(min_max_text, min_max_text_position)
 
     def render_state(self):
-        font = pygame.font.SysFont(None, 35)
-        position = ((utils.COLS + 0.5) * SQUARESIZE, (utils.ROWS - 1.5) * SQUARESIZE + 25)
-        text = font.render(f"State: {self.rendered_node.bitboard}", True, DARK_BLUE)
+        font = pygame.font.SysFont(None, 20)
+        position = ((utils.COLS + 0.5) * SQUARESIZE - 25, (utils.ROWS - 1.5) * SQUARESIZE + 25)
+        text = font.render(f"State: {bin(self.rendered_node.bitboard)}", True, DARK_BLUE_2)
         self.screen.blit(text, position)
 
     def _draw_node(self, position, node):
@@ -241,7 +247,7 @@ class MainGame:
         self.game_over = False
 
         self.turn = random.randint(AI_TURN, PLAYER_TURN)
-        self.my_font = pygame.font.SysFont("monospace", 20, bold=True)
+        self.my_font = pygame.font.Font("img/Good-Game.ttf", 25)
         self.draw_board(utils.current_numboard)
 
         pygame.display.update()
@@ -282,7 +288,7 @@ class MainGame:
         pygame.display.update()
 
     def run(self):
-        global nodes_expanded, ai_score, player_score, time_lbl
+        global nodes_expanded, ai_score, player_score, time_lbl, display_message
         while not self.game_over:
 
             sidebar.draw(ai_score, player_score, nodes_expanded)
@@ -293,10 +299,12 @@ class MainGame:
                 # Clicks on the sidebar
                 if event.type == pygame.MOUSEBUTTONDOWN and K > 0:
                     mouse_x, mouse_y = pygame.mouse.get_pos()
-                    # if sidebar.tree_button.rect.collidepoint(mouse_x, mouse_y):
-                    #     if sidebar.tree:
-                    #         sidebar.graph_shown = True
-                    #         # self.initial_node_shown = True
+                    if sidebar.export_button.rect.collidepoint(mouse_x, mouse_y):
+                        if sidebar.tree:
+                            visualization = sidebar.tree.visualize_tree(sidebar.tree)
+                            visualization.render('minimax_tree', format='pdf', cleanup=True)
+                            display_message = 'Tree exported!'
+
                     if sidebar.reset_button.rect.collidepoint(mouse_x, mouse_y):
                         self.reset_data()
                         break
@@ -325,14 +333,6 @@ class MainGame:
                         self.draw_board(utils.current_numboard)
                         self.turn = AI_TURN
 
-            # if utils.is_game_over():
-                # if ai_score < player_score:
-                #     print("You are winner")
-                # elif player_score < ai_score:
-                #     print("You Lost!!")
-                # else:
-                #     print("TIE!!")
-
             if self.turn == AI_TURN and not utils.is_game_over():
                 start = time.time()
                 if method == 1:
@@ -354,10 +354,19 @@ class MainGame:
                 # GET SCORE
                 ai_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'AI', 4)
                 player_score_raw = heuristics.count_consecutive_pieces(utils.current_bitboard, 'Human', 4)
-                ai_score = ai_score_raw['vertical'] + sum(ai_score_raw['horizontal']) + sum(ai_score_raw['diagonal'])
-                player_score = player_score_raw['vertical'] + sum(player_score_raw['horizontal']) + sum(player_score_raw['diagonal'])
 
-                print('AI:', ai_score_raw, 'PLAYER:', player_score_raw)
+
+                temp_ai_score = ai_score_raw['vertical'] + sum(ai_score_raw['horizontal']) + sum(ai_score_raw['diagonal'])
+                temp_player_score = player_score_raw['vertical'] + sum(player_score_raw['horizontal']) + sum(player_score_raw['diagonal'])
+
+                if (temp_ai_score > ai_score):
+                    ai_score = temp_ai_score
+                    display_message = 'Ops! AI Scored!'
+                if (temp_player_score > player_score):
+                    player_score = temp_player_score
+                    display_message = 'Gg! You Scored!'
+
+                print('AI:', ai_score_raw, 'PLAYER:', player_score_raw)   
 
 
 K = input(".:Enter K: ")

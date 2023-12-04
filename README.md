@@ -83,3 +83,9 @@ The performance analysis demonstrates that while the Minimax algorithm provides 
 - [Research on Different Heuristics for Minimax Algorithm Insight from Connect-4 Game (Xiyu Kang, Yiqi Wang, Yanrui Hu)](https://file.scirp.org/Html/1-9601415_90972.htm)
 - [Kaggle - One-Step Lookahead](https://www.kaggle.com/code/alexisbcook/one-step-lookahead)
 - [Readers' Digest - How to Win Connect 4 Every Time, According to the Computer Scientist Who Solved It](https://www.rd.com/article/how-to-win-connect-4/)
+
+## Contributors
+- [Mahmoud Embaby](https://github.com/membaby)
+- [Ehab Yasser](https://github.com/EhabYasser25)
+- [Rowaina Abdelnaser](https://github.com/rowaina2025)
+- [Sama Zayed](https://github.com/samatarekzayed)
